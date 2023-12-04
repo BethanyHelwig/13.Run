@@ -3,10 +3,11 @@ import 'trainee.dart';
 class TrainingPlan {
   final double totalDistance = 13.1;
   int programLength = 12;
+  DateTime dateCreated;
   Trainee trainee = Trainee(name: 'Bethany', age: 32, weight: 160, sex: 'Female');
   List<Workout> workouts = [];
 
-  TrainingPlan(this.programLength, this.trainee, this.workouts);
+  TrainingPlan(this.programLength, this.trainee, this.workouts, this.dateCreated);
 }
 
 class Workout {
