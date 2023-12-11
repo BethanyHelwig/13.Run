@@ -1,22 +1,24 @@
-/*
-import 'interval.dart';
-
+import 'interval_run.dart';
 
 class EvaluationData {
   // ---- Input data ------
   int restingHeartrate;
-  List<Interval> intervals = [];
+  List<IntervalRun> intervalRuns = [];
+  List<IntervalData> intervalData = [];
 
   // ---- Calculated figures -------
-  String fitnessLevel;
-  double vo2;
-  double power;
-  double mets;
-  double kcals;
-  double speed;
+  String fitnessLevel = '';
+  double vo2 = 0;
+  double speed = 0;
+  int heartrateRange = 0;
+  //double power = 0;
+  //double mets = 0;
+  //double kcals = 0;
+
 
   EvaluationData({
     required this.restingHeartrate,
+    required this.intervalRuns,
   });
 
   calculateFitnessLevelMale(double vo2, int age) {
@@ -63,4 +65,22 @@ class EvaluationData {
     }
   }
 }
- */
+
+class IntervalData {
+  int distance = 0;
+  Duration time = Duration();
+  int heartrate = 0;
+  Duration split = Duration();
+  Duration pace = Duration();
+  double speed = 0;
+
+  IntervalData(IntervalRun run) {
+    distance = run.distance;
+    time = run.time;
+    heartrate = run.heartrate;
+    //split =
+    //pace = split * 4;
+    //speed = 15 / (split.inSeconds/60)
+  }
+
+}
