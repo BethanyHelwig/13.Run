@@ -1,10 +1,10 @@
-class Interval {
+class IntervalRun {
 
   int distance;
   Duration time;
   int heartrate;
 
-  Interval({
+  IntervalRun({
       required this.distance,
       required this.time,
       required this.heartrate,

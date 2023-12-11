@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "834300685170",
+    "project_id": "thirteenpointrun",
+    "storage_bucket": "thirteenpointrun.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:834300685170:android:a5c5fd226efa0e333d4beb",
+        "android_client_info": {
+          "package_name": "phantomfox.fitness.thirteen_point_run"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkIXNYeJEXGS9UiY9JROaIXoliBndyJeA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

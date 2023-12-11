@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyCj6ZrIEpMtTLVc6Xb4ok1HltXSexpqgKk</string>
+	<key>GCM_SENDER_ID</key>
+	<string>834300685170</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>phantomfox.fitness.thirteenPointRun</string>
+	<key>PROJECT_ID</key>
+	<string>thirteenpointrun</string>
+	<key>STORAGE_BUCKET</key>
+	<string>thirteenpointrun.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:834300685170:ios:0cfd744c67fa3eeb3d4beb</string>
+</dict>
+</plist>
