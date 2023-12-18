@@ -1,13 +1,18 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:thirteen_point_run/evaluation_data.dart';
-import 'package:thirteen_point_run/training_plan.dart';
-import 'trainee.dart';
-import 'package:intl/intl.dart';
-import 'interval_run.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+
+import 'evaluation_data.dart';
+import 'training_plan.dart';
+import 'trainee.dart';
+import 'interval_run.dart';
+import 'calculate_training_plan.dart';
+import 'workout.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,8 +53,11 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+TrainingPlan? targetPlan;
+
 class _MyHomePageState extends State<MyHomePage> {
 
+  //static TrainingPlan? targetPlan;
   final CollectionReference itemCollectionDB = FirebaseFirestore.instance.collection('PLANS');
 
   // --------- Mask for duration input fields __________
@@ -101,6 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
     int eval2400HR = int.parse(eval2400HRTextField.text);
     Duration eval2400Time = parseDuration(eval2400TimeTextField.text);
 
+    // Creation of each component that goes into making the training plan
     Trainee trainee = Trainee(name: name, age: age, weight: weight, sex: sex);
     List<IntervalRun> intervalRuns = [
       IntervalRun(distance: 0, time: const Duration(), heartrate: evalStartHR),
@@ -111,19 +120,11 @@ class _MyHomePageState extends State<MyHomePage> {
       IntervalRun(distance: 2000, time: eval2000Time, heartrate: eval2000HR),
       IntervalRun(distance: 2400, time: eval2400Time, heartrate: eval2400HR)
     ];
-    EvaluationData evaluationData = EvaluationData(restingHeartrate: restingHR, intervalRuns: intervalRuns);
-    TrainingPlan newTrainingPlan = TrainingPlan(trainee, DateTime.now(), evaluationData);
-    newTrainingPlan.intensityChart = newTrainingPlan.calculateChart(evaluationData);
-    //TODO: fix beginning distance placeholder with final calculations
-    newTrainingPlan.workouts = newTrainingPlan.calculateWorkouts(2);
+    EvaluationData evaluationData = EvaluationData(intervalRuns: intervalRuns, restingHeartrate: restingHR);
+    targetPlan = calculateTrainingPlan(trainee, evaluationData);
 
-    // Sending all the information over to Firebase
-    await itemCollectionDB.add({
-          "name": trainee.name,
-          "age" : trainee.age,
-          "sex" : trainee.sex,
-          "weight" : trainee.weight
-    });
+    // Uploding the training plan to Firebase database
+    await itemCollectionDB.add(targetPlan?.toJson());
 
   }
 
@@ -253,13 +254,13 @@ class _MyHomePageState extends State<MyHomePage> {
                           height: 40,
                           width: 125,
                           child: TextField(controller: eval400HRTextField,
-                            decoration: InputDecoration(
-                                labelText: 'Heartrate',
+                            decoration: const InputDecoration(
+                                labelText: 'Heart rate',
                                 border: OutlineInputBorder()
                             ),
                           ),
                         ),
-                        SizedBox(width: 20),
+                        const SizedBox(width: 20),
                         Container(
                           height: 40,
                           width: 200,
@@ -446,8 +447,10 @@ class _MyHomePageState extends State<MyHomePage> {
                           padding: const EdgeInsets.all(9.0),
                           child: ElevatedButton(
                               onPressed: () {
-                                Navigator.pop(context);
-                                _createTrainingPlan();
+                                setState(() {
+                                  Navigator.pop(context);
+                                  _createTrainingPlan();
+                                });
                               },
                               child: Text('Submit')),
                         ),
@@ -461,7 +464,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   // ---------- Load Plan pop-up window -----------------
-  void _loadPlanDialog(){
+  void _loadPlanDialog() {
     showDialog<String>(
         context: context,
         builder: (BuildContext context) =>
@@ -486,14 +489,17 @@ class _MyHomePageState extends State<MyHomePage> {
                             return ListView.builder(
                                 itemCount: snapshot.data!.docs.length,
                                 itemBuilder: (BuildContext context, int position) {
-                                  Card(
+                                  return Card(
                                       child: ListTile(
-                                        title: Text(snapshot.data!.docs[position]['name']),
+                                        title: Text(snapshot.data!.docs[position]['trainee.name']),
+                                        subtitle: Text("Created: ${DateFormat.yMd().format((snapshot.data!.docs[position]['dateCreated'] as Timestamp).toDate())}"),
                                         onTap: () {
                                           setState(() {
-                                            print("You tapped on items $position");
                                             String itemId = snapshot.data!.docs[position].id;
-                                            //itemCollectionDB.doc(itemId).delete();
+                                            print(targetPlan?.trainee.name);
+                                            targetPlan = TrainingPlan.fromSnapshot(snapshot.data?.docs[position] as DocumentSnapshot<Object?>);
+                                            print(targetPlan?.trainee.name);
+                                            Navigator.pop(context);
                                           });
                                         },
                                       )
@@ -516,14 +522,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                 child: Text('Cancel')),
                     ),
-                    Padding(
-                padding: const EdgeInsets.all(9.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                child: Text('Load')),
-                    ),
                   ],
                 )
               ]
@@ -535,37 +533,32 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      /*appBar: AppBar(
-        //backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Image.asset('assets/images/13PointRun.png',)
-        //Text(widget.title),
-      ),*/
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             pinned: true,
-            expandedHeight: 175,
+            expandedHeight: 360,
               flexibleSpace: FlexibleSpaceBar(
-                stretchModes: [
+                stretchModes: const [
                   StretchMode.zoomBackground,
                   StretchMode.fadeTitle,
                   StretchMode.blurBackground,
                 ],
-                title: Text(
-                    '13.Run',
-                    style: Theme.of(context).textTheme.headlineMedium
-                ),
-                  //Image.asset('assets/images/13PointRun.png'),
+                title:
+                  Image.asset('assets/images/13PointRun.png',
+                  fit: BoxFit.contain,
+                  width: 225,
+                  ),
                 background: DecoratedBox(
                   position: DecorationPosition.foreground,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: <Color>[Colors.white12, Colors.transparent],
                     )
                   ),
-                  child: Image.asset('assets/images/Run_header.jpg', fit: BoxFit.cover),
+                  child: Image.asset('assets/images/Run_header.png', fit: BoxFit.cover),
                 ),
               ),
           ),
@@ -576,7 +569,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.all(15.0),
                           child: ElevatedButton(
                               onPressed: () { _createPlanDialog();},
                               child: const Text('Create Plan')),
@@ -589,16 +582,70 @@ class _MyHomePageState extends State<MyHomePage> {
                         )
                       ]
                   ),
-                  const TrainingOverview(),
+                  getPrimary(),
                 ]
             )
           ),
-          const TrainingPlanWorkouts(),
+          getSecondary(),
         ]
       ),
     );
   }
+
+  Widget getPrimary() {
+    if(targetPlan != null) {
+      return const TrainingOverview();
+    } else {
+      return const WelcomeOverview();
+    }
+  }
+
+  Widget getSecondary() {
+    if(targetPlan != null) {
+      return const TrainingPlanWorkouts();
+    } else {
+      return const NoWorkouts();
+    }
+  }
+
 }
+
+// ---- Placeholder for the workout area until plan is selected -----
+class NoWorkouts extends StatelessWidget {
+  const NoWorkouts({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final TextTheme textTheme = Theme
+        .of(context)
+        .textTheme;
+
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+            (context, index) {
+          Workout? workout = Server.getWorkoutByID(index);
+          return Card(
+            child: Column(
+              children: <Widget>[
+                SizedBox(height: 20),
+                Icon(
+                  Icons.directions_run,
+                  color: Colors.deepOrange[400],
+                  size: 50,
+                ),
+                SizedBox(height: 20),
+                Text('Workouts will display here once a plan is created or chosen.'),
+                SizedBox(height: 20),
+              ],
+            ),
+          );
+        },
+        childCount: 1,
+      ),
+    );
+  }
+}
+
 
 // ----------- Sliver Workout List --------------------------
 class TrainingPlanWorkouts extends StatelessWidget {
@@ -611,11 +658,11 @@ class TrainingPlanWorkouts extends StatelessWidget {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
           (context, index) {
-            Workout workout = Server.getWorkoutByID(index);
+            Workout? workout = targetPlan?.workouts[index];
             return Card(
               child: Column(
                 children: <Widget>[
-                  workoutTitle(workout, textTheme),
+                  workoutTitle(workout!, textTheme),
                   Row(
                     children: [
                       leadingImage(workout),
@@ -627,7 +674,7 @@ class TrainingPlanWorkouts extends StatelessWidget {
               ),
             );
           },
-          childCount: 6,
+          childCount: 8,
       ),
     );
   }
@@ -640,13 +687,16 @@ class TrainingPlanWorkouts extends StatelessWidget {
       constraints: const BoxConstraints.tightForFinite(
         height: 45,
       ),
-      /*decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white10,
-      ),*/
-      child: Text(
-        'Exercise #${workout.positionInSequence}',
-        style: textTheme.headlineSmall,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Exercise #${workout.positionInSequence}',
+            style: textTheme.headlineSmall,
+          ),
+          Text('Week ${workout.weekNumber}',
+            style: textTheme.headlineSmall)
+        ],
       ),
     );
   }
@@ -677,7 +727,7 @@ class TrainingPlanWorkouts extends StatelessWidget {
                   '${workout.distance} ${workout.description}',
                   style: TextStyle(height: 1.5)),
               Text(
-                  'Target Heartrate: ${workout.targetHeartrate} \nType: ${workout.type}',
+                  'Target heart rate: ${workout.targetHeartRate} \nType: ${workout.type}',
                   style: TextStyle(height: 1.5)),
             ],
           )
@@ -689,9 +739,18 @@ class TrainingPlanWorkouts extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: ElevatedButton(
-          onPressed: () {},
-          child: Text('Completed?')),
-    );
+          onPressed: () {
+          },
+          child: Text('Click to complete'),
+    ));
+  }
+
+  Widget completedWorkout(Workout workout){
+    if (workout.completed) {
+      return Text('Completed!');
+    } else {
+      return Text('Click to complete');
+    }
   }
 
 }
@@ -702,59 +761,70 @@ class TrainingOverview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-  TrainingPlan trainingPlan = Server.getTrainingPlan();
+  //TrainingPlan? trainingPlan = targetPlan;
     return Column(
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.all(9.0),
           child: Text(
-              'Training Plan for ${trainingPlan.trainee.name}',
+              'Training Plan for ${targetPlan?.trainee.name}',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
         ),
-        Text('Date created: ${DateFormat.yMd().format(trainingPlan.dateCreated)}'),
-        Text('Goal: 13.1 miles',
+        Text('Fitness Level: ${targetPlan!.fitnessLevel}'),
+        Text('Date created: ${DateFormat.yMd().format(targetPlan!.dateCreated)}',
+          style: const TextStyle(height: 1.5)),
+        const Text('Goal: 13.1 miles',
           style: TextStyle(height: 1.5)),
-        Text('Length: 12 weeks',
+        const Text('Length: 12 weeks',
           style: TextStyle(height: 1.5)),
-        Text('End Date: March 13, 2024',
-          style: TextStyle(height: 1.5)),
-        SizedBox(height:20)
+        //TODO Calculate end date
+        //Text('End Date: March 13, 2024',
+        //  style: TextStyle(height: 1.5)),
+        const SizedBox(height:20)
       ],
     );
   }
 }
 
+// ----------- Training Plan general details widget -----------------
+class WelcomeOverview extends StatelessWidget {
+  const WelcomeOverview({super.key});
 
-// --------- Dummy Data --------------
-Trainee dummyTrainee = Trainee(name: 'Bethany', age: 32, weight: 160, sex: 'Female');
-TrainingPlan dummyPlan = TrainingPlan(dummyTrainee, DateTime.now(), evalData);
-EvaluationData evalData = EvaluationData(intervalRuns: intervals, restingHeartrate: 67);
-List<IntervalRun> intervals = [
-  IntervalRun(distance: 0, time: const Duration(minutes: 4, seconds: 14), heartrate: 67),
-  IntervalRun(distance: 400, time: const Duration(minutes: 4, seconds: 14), heartrate: 67),
-  IntervalRun(distance: 800, time: const Duration(minutes: 4, seconds: 14), heartrate: 67),
-  IntervalRun(distance: 1200, time: const Duration(minutes: 4, seconds: 14), heartrate: 67),
-  IntervalRun(distance: 1600, time: const Duration(minutes: 4, seconds: 14), heartrate: 67),
-  IntervalRun(distance: 2000, time: const Duration(minutes: 4, seconds: 14), heartrate: 67),
-  IntervalRun(distance: 2400, time: const Duration(minutes: 4, seconds: 14), heartrate: 67),
-];
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.all(22.0),
+          child: Text(
+            'Welcome to your half-marathon\n training companion!',
+            style: Theme.of(context).textTheme.headlineSmall,
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Text('To get started, click on \'Create plan\' above.\nOr, if you\'ve already created a plan, click on \'Load Plan.\'',
+          textAlign: TextAlign.center),
+        ),
+        const SizedBox(height:20)
+      ],
+    );
+  }
+}
 
 // --------- Helpers -----------------
 class Server {
-  static List<Workout> getWorkoutList() =>
-      dummyPlan.workouts.toList();
+  static List<Workout>? getWorkoutList() =>
+      targetPlan?.workouts.toList();
 
-  static Workout getWorkoutByID(int id) {
-    dummyPlan.intensityChart = dummyPlan.calculateChart(dummyPlan.evaluationData);
-    dummyPlan.workouts = dummyPlan.calculateWorkouts(2);
-    assert(id >= 0 && id <= 6);
-    return dummyPlan.workouts[id]!;
+  //TODO will need to update the range once all the workouts have been coded in
+  static Workout? getWorkoutByID(int id) {
+    assert(id >= 0 && id <= 7);
+    return targetPlan?.workouts[id];
   }
-
-  static TrainingPlan getTrainingPlan() => dummyPlan;
-
-  static Trainee getTrainee() => dummyPlan.trainee;
+  static TrainingPlan? getTrainingPlan() => targetPlan;
 }
 
 class ConstantScrollBehavior extends ScrollBehavior {
@@ -773,9 +843,9 @@ class ConstantScrollBehavior extends ScrollBehavior {
   @override
   TargetPlatform getPlatform(BuildContext context) => TargetPlatform.macOS;
 
-  @override
+  /*@override
   ScrollPhysics getScrollPhysics(BuildContext context) =>
-      const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+      const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());*/
 }
 
 Duration parseDuration(String input, {String separator = ':'}) {
