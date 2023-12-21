@@ -555,7 +555,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   StretchMode.blurBackground,
                 ],
                 title:
-                  Image.asset('assets/images/13PointRun.png',
+                  Image.asset('assets/images/13PointRun_title.png',
                   fit: BoxFit.contain,
                   width: 225,
                   ),
@@ -568,7 +568,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       colors: <Color>[Colors.white12, Colors.transparent],
                     )
                   ),
-                  child: Image.asset('assets/images/Run_header.png', fit: BoxFit.cover),
+                  child: Image.asset('assets/images/Header_image.png', fit: BoxFit.cover),
                 ),
               ),
           ),

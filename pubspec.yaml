@@ -59,8 +59,8 @@ dev_dependencies:
 flutter:
 
   assets:
-    - assets/images/13PointRun.png
-    - assets/images/Run_header.png
+    - assets/images/13PointRun_title.png
+    - assets/images/Header_image.png
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
