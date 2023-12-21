@@ -37,6 +37,10 @@ class TrainingPlan {
     required this.intensityChart
   });
 
+  /// Transform data into [TrainingPlan] object from Firebase database
+  ///
+  /// [Pace] is converted into Duration from int. Custom objects are transformed
+  /// by their own separate maps.
   factory TrainingPlan.fromSnapshot(DocumentSnapshot docSnap) => TrainingPlan(
     trainee: Trainee.fromMap(docSnap['trainee']), // convert
     dateCreated: (docSnap['dateCreated'] as Timestamp).toDate(),

@@ -1,10 +1,10 @@
 import 'dart:collection';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Intensity {
   String description = '';
   double rangePercentage = 0.0;
   int heartrate;
+  //TODO: implement target pace for each intensity
   //Duration pace = Duration();
 
   Intensity({
@@ -12,6 +12,7 @@ class Intensity {
     required this.rangePercentage,
     required this.heartrate});
 
+  /// Transform data into [Intensity] object from Firebase database
   factory Intensity.fromMap(LinkedHashMap<dynamic, dynamic> map) => Intensity(
     description: map['description'],
     rangePercentage: map['rangePercentage'],

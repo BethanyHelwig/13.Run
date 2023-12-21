@@ -1,7 +1,5 @@
 import 'dart:collection';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Trainee {
 
   String name;
@@ -16,6 +14,7 @@ class Trainee {
     required this.sex,
   });
 
+  /// Transform data into [trainee] object from Firebase database
   factory Trainee.fromMap(LinkedHashMap<dynamic, dynamic> map) => Trainee(
       name: map['name'],
       age: map['age'],
@@ -23,6 +22,7 @@ class Trainee {
       sex: map['sex']
   );
 
+  /// Transform to be read by Firebase database
   Map<String, dynamic> toJson() => {
     'name': name,
     'age': age,

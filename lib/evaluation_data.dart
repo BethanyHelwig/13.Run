@@ -1,8 +1,7 @@
 import 'dart:collection';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:thirteen_point_run/trainee.dart';
 import 'interval_run.dart';
 
+/// Base data that is then used to calculate [TrainingPlan].
 class EvaluationData {
   // ---- Input data ------
   int restingHeartrate;
@@ -13,6 +12,7 @@ class EvaluationData {
     required this.restingHeartrate,
   });
 
+  /// Transform data into [EvaluationData] object from Firebase database
   factory EvaluationData.fromMap(LinkedHashMap<dynamic, dynamic> map) => EvaluationData(
     restingHeartrate: map['restingHeartrate'],
     intervalRuns: List<IntervalRun>.from(map['intervalRuns'].map((x) => IntervalRun.fromMap(x))),
@@ -24,7 +24,7 @@ class EvaluationData {
   };
 }
 
-// TODO: additional feature and data collected to add later
+// TODO: features and data collected to add later
 /*
 class IntervalData {
   int distance = 0;

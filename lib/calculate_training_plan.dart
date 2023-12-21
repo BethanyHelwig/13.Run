@@ -1,4 +1,6 @@
 import 'dart:core';
+import 'package:flutter/foundation.dart';
+
 import 'interval_run.dart';
 import 'trainee.dart';
 import 'evaluation_data.dart';
@@ -6,14 +8,21 @@ import 'training_plan.dart';
 import 'workout.dart';
 import 'intensity.dart';
 
+/// Calculates the final training plan, including all [workouts] using the
+/// information collected by the user for the [trainee] and [evalData] objects.
+///
+/// Algorithms and calculates are copyright William Helwig, who created this plan
+/// as part of this Master's in Exercise Psy
 TrainingPlan calculateTrainingPlan(Trainee trainee, EvaluationData evalData) {
+
+  /// This is originally calculated in microseconds then converted to Duration.
   int paceInMicroSeconds = (evalData.intervalRuns[6].time.inMicroseconds ~/ 1.5).round();
   Duration pace = Duration(days: 0, hours: 0, minutes: 0, seconds: 0, milliseconds: 0, microseconds: paceInMicroSeconds);
-  double speed = 60 / (pace.inSeconds / 60);
-  print("speed: {$speed}");
-  print("pace: {$pace}");
 
-  // calculate the average heartrate
+  /// Speed is calculated using [pace].
+  double speed = 60 / (pace.inSeconds / 60);
+
+  /// Loops through heart rate date in [evalData.intervalRuns] to find average heart rate.
   int calculateAverageHR(){
     int totalHR = 0;
     for(IntervalRun run in evalData.intervalRuns) {
@@ -23,9 +32,8 @@ TrainingPlan calculateTrainingPlan(Trainee trainee, EvaluationData evalData) {
     return average;
   }
   int averageHR = calculateAverageHR();
-  print("average heart rate: {$averageHR}");
 
-  // calculate the maximum heartrate and heartrate range
+  /// Loops through heart rate data in [evalData.intervalRuns] to find the max heart rate.
   int calculateMaximumHR(){
     int maxHR = 0;
     for(IntervalRun run in evalData.intervalRuns) {
@@ -35,13 +43,15 @@ TrainingPlan calculateTrainingPlan(Trainee trainee, EvaluationData evalData) {
     }
     return maxHR;
   }
-  int estimatedMaxHR = 220 - trainee.age;
   int actualMaxHR = calculateMaximumHR();
-  int heartrateRange = actualMaxHR - evalData.restingHeartrate;
-  print("maximum heart rate: {$actualMaxHR}");
-  print("heart rate range: {$heartrateRange}");
 
-  // calcuate the vo2, which is the maximum (max) rate (V) of oxygen (O₂) your body is able to use during exercise
+  //TODO: use the estimated HR in later versions
+  //int estimatedMaxHR = 220 - trainee.age;
+
+  /// After [actualMaxHR] is calculated, can calculate this.
+  int heartrateRange = actualMaxHR - evalData.restingHeartrate;
+
+  /// Calculates the vo2, which is the maximum (max) rate (V) of oxygen (O₂) your body is able to use during exercise
   double calculateVo2() {
     if(speed < 3.7){
       return 0.1 * speed * 26.8 + 3.5;
@@ -50,17 +60,28 @@ TrainingPlan calculateTrainingPlan(Trainee trainee, EvaluationData evalData) {
     }
   }
   double vo2 = calculateVo2();
-  print("vo2: {$vo2}");
 
-  // calculate the fitness level of the individual using their vo2, age, and sex
+  if (kDebugMode) {
+    print("speed: {$speed}");
+    print("pace: {$pace}");
+    print("average heart rate: {$averageHR}");
+    print("maximum heart rate: {$actualMaxHR}");
+    print("heart rate range: {$heartrateRange}");
+    print("vo2: {$vo2}");
+  }
+
+  /// Calculates the fitness level of the [trainee] using vo2, age, and sex.
   String fitnessLevel;
   if(trainee.sex == 'Male') {
     fitnessLevel = calculateFitnessLevelMale(vo2, trainee.age);
   } else {
     fitnessLevel = calculateFitnessLevelFemale(vo2, trainee.age);
   }
-  print("fitness level: {$fitnessLevel}");
-  // calculate the beginning distance
+  if (kDebugMode) {
+    print("fitness level: {$fitnessLevel}");
+  }
+
+  /// Calculates the beginning distance based on the fitness level.
   int beginningDistance;
   if(fitnessLevel == "Average" || fitnessLevel == "Fair"){
     beginningDistance = 2;
@@ -69,11 +90,14 @@ TrainingPlan calculateTrainingPlan(Trainee trainee, EvaluationData evalData) {
   } else {
     beginningDistance = 1;
   }
-  print("beginning distance: {$beginningDistance}");
-  // Create the intensity chart for this individual that sets the target heartrate for each type of workout
+  if (kDebugMode) {
+    print("beginning distance: {$beginningDistance}");
+  }
+
+  /// Create the intensity chart that sets the target heart rate for each type of workout
   List<Intensity> intensityChart = calculateChart(heartrateRange, evalData.restingHeartrate);
 
-  // Create the complete list of workouts built off the previously calculated information
+  /// Create the complete list of workouts built off the previously calculated information
   List<Workout> workouts = calculateWorkouts(beginningDistance, intensityChart);
 
   return TrainingPlan(
@@ -92,6 +116,7 @@ TrainingPlan calculateTrainingPlan(Trainee trainee, EvaluationData evalData) {
 
 }
 
+/// Male-specific table for calculating fitness level.
 String calculateFitnessLevelMale(double vo2, int age) {
   String fitnessLevel;
   if (age < 30) {
@@ -180,6 +205,7 @@ String calculateFitnessLevelMale(double vo2, int age) {
   return fitnessLevel;
 }
 
+/// Female-specific table for calculating fitness level.
 String calculateFitnessLevelFemale(double vo2, int age) {
   String fitnessLevel;
   if (age < 30) {
@@ -267,10 +293,9 @@ String calculateFitnessLevelFemale(double vo2, int age) {
   }
   return fitnessLevel;
 }
-/// Using the personalized intensity chart and beginning distance, calculate the
-/// target heart rate for the workout based on the intensity of it
+/// Calculate the target heart rate for each workout intensity.
 calculateHeartRate(int beginningDistance, String type, int week, List<Intensity> chart) {
-  // for fitness levels of Low
+  /// for fitness levels of Low
   if (beginningDistance == 1) {
     if (week < 5) {
       return chart[0].heartrate;
@@ -289,7 +314,7 @@ calculateHeartRate(int beginningDistance, String type, int week, List<Intensity>
           return chart[3].heartrate;
       }
     }
-    // for fitness levels of Fair and Average
+    /// for fitness levels of Fair and Average
   } else if (beginningDistance == 2) {
     if (week < 5) {
       return chart[1].heartrate;
@@ -308,7 +333,7 @@ calculateHeartRate(int beginningDistance, String type, int week, List<Intensity>
           return chart[4].heartrate;
       }
     }
-    // for fitness levels of Good and High
+    /// for fitness levels of Good and High
   } else if (beginningDistance == 3) {
     if (week < 5) {
       return chart[2].heartrate;
@@ -330,7 +355,7 @@ calculateHeartRate(int beginningDistance, String type, int week, List<Intensity>
   }
   return 0;
 }
-
+/// Create intensity chart using heart rate range and resting HR.
 List<Intensity> calculateChart(int heartRateRange, int restingHeartRate) {
 
   List<Intensity> intensityChart = [
@@ -348,7 +373,7 @@ List<Intensity> calculateChart(int heartRateRange, int restingHeartRate) {
   return intensityChart;
 }
 
-// should be 48 workouts in total for 4 per week over 12 weeks
+/// Calculates the 48 workouts in total for a plan; 4 per week over 12 weeks.
 List<Workout> calculateWorkouts(int beginningDistance, List<Intensity> intensityChart) {
   List<Workout> workouts = [
     Workout(
@@ -417,24 +442,7 @@ List<Workout> calculateWorkouts(int beginningDistance, List<Intensity> intensity
         completed: false),
   ];
 
-  // Calculating the distance for each workout
-  /*workouts[6].distance = beginningDistance;
-    workouts[7].distance = beginningDistance + 1;
-    if(beginningDistance == 3) {
-      workouts[8].distance = beginningDistance;
-      workouts[9].distance = beginningDistance;
-      workouts[10].distance = beginningDistance;
-      workouts[12].distance = beginningDistance;
-    } else {
-      workouts[8].distance = beginningDistance + 1;
-      workouts[9].distance = beginningDistance + 1;
-      workouts[10].distance = beginningDistance + 1;
-      workouts[12].distance = beginningDistance + 1;
-    }
-    workouts[11].distance = beginningDistance + 1;
-    workouts[12].distance = beginningDistance;
-    workouts[13].distance = beginningDistance;
-    workouts[14].distance = beginningDistance + 1;*/
+  // TODO: finish inputting the rest of the workouts
 
   return workouts;
 }

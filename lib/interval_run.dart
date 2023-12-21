@@ -1,6 +1,6 @@
 import 'dart:collection';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
+/// Component that makes up the majority of [EvaluationData].
 class IntervalRun {
 
   int distance;
@@ -14,6 +14,7 @@ class IntervalRun {
   }
   );
 
+  /// Transform data into [IntervalRun] object from Firebase database
   factory IntervalRun.fromMap(LinkedHashMap<dynamic, dynamic> map) => IntervalRun(
     distance: map['distance'],
     time: Duration(microseconds: map['time']),

@@ -1,7 +1,5 @@
 import 'dart:collection';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Workout {
   int positionInSequence = 0;
   int targetHeartRate = 0;
@@ -21,16 +19,7 @@ class Workout {
     required this.completed
   });
 
-  /*factory Workout.fromSnapshot(DocumentSnapshot docSnap) => Workout(
-    positionInSequence: docSnap['positionInSequence'],
-    targetHeartRate: docSnap['targetHeartRate'],
-    description: docSnap['description'],
-    type: docSnap['type'],
-    distance: docSnap['distance'],
-    weekNumber: docSnap['weekNumber'],
-    completed: docSnap['completed']
-  );*/
-
+  /// Transform data into [workout] object from Firebase database
   factory Workout.fromMap(LinkedHashMap<dynamic, dynamic> map) => Workout(
       positionInSequence: map['positionInSequence'],
       targetHeartRate: map['targetHeartRate'],
@@ -41,6 +30,7 @@ class Workout {
       completed: map['completed']
   );
 
+  /// Transform to be read by Firebase database
   Map<String, dynamic> toJson() => {
     'positionInSequence': positionInSequence,
     'targetHeartRate': targetHeartRate,
