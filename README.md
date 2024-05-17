@@ -1,16 +1,20 @@
-# thirteen_point_run
+# 13.Run
 
-A half marathon training app
+Thirteen-Point-Run (13.Run) is a half marathon training app. The name plays off the distance 
+of a half marathon which is 13.1 miles.
 
-## Getting Started
+## Introduction
+Algorithms and calculations are copyright William Helwig, who created this plan
+as part of his Master's in Exercise Physiology
 
-This project is a starting point for a Flutter application.
+## Version 1.0
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The first version was completed for my college course in Mobile Device Programming. 
+- Main screen displays a welcome page when information is not yet loaded.
+- Two buttons direct to Create Plan and Load Plan.
+- Create Plan takes user input on trainee information and an evaluation run.
+- Trainee and evaluation information is used to create a personalized training plan.
+- Workouts with target heart rate and distance are displayed on the main page.
+- Each workout can be marked as completed.
+- Data is saved to a cloud Firebase database.
+- Load Plan displays all saved training plans which can then be selected and loaded to the display.
