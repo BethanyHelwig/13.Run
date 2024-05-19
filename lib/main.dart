@@ -539,6 +539,50 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  /// -------------- Evaluation Data Display pop-up window -----------------
+  void _evalDataDisplayDialog() {
+    showDialog<String>(
+        context: context,
+        builder: (BuildContext context) =>
+            SimpleDialog(
+                title: Text("Evaluation Data for ${targetPlan?.trainee.name}",
+                textAlign: TextAlign.center,),
+                contentPadding: const EdgeInsets.all(15.0),
+                children: [
+                  SizedBox(
+                    height: 300,
+                    child:
+                      Column(
+                        children: [
+                          Text('Trainee:', style: Theme.of(context).textTheme.headlineSmall),
+                          Text('Name: ${targetPlan?.trainee.name}'),
+                          Text('Age: ${targetPlan?.trainee.age}'),
+                          Text('Sex: ${targetPlan?.trainee.sex}'),
+                          Text('Weight: ${targetPlan?.trainee.weight}'),
+                          SizedBox(height: 20),
+                          Text('Evaluation Data:', style: Theme.of(context).textTheme.headlineSmall),
+                          Text(evalDataRow(targetPlan!.evaluationData))
+                        ],
+                      ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(9.0),
+                        child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: const Text('Cancel')),
+                      ),
+                    ],
+                  )
+                ]
+            )
+    );
+  }
+
   /// ----------------- Main GUI body ---------------------
   @override
   Widget build(BuildContext context) {
@@ -622,27 +666,129 @@ class _MyHomePageState extends State<MyHomePage> {
 
   /// -------------- Training Plan general details widget -----------------
   Widget trainingOverview() {
-    return Column(
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.all(9.0),
-          child: Text(
-            'Training Plan for ${targetPlan?.trainee.name}',
-            style: Theme.of(context).textTheme.headlineSmall,
+    return Center(
+      child: Column(
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(9.0),
+            child: Text(
+              'Training Plan for ${targetPlan?.trainee.name}',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
           ),
-        ),
-        Text('Fitness Level: ${targetPlan!.fitnessLevel}'),
-        Text('Date created: ${DateFormat.yMd().format(targetPlan!.dateCreated)}',
-            style: const TextStyle(height: 1.5)),
-        const Text('Goal: 13.1 miles',
-            style: TextStyle(height: 1.5)),
-        const Text('Length: 12 weeks',
-            style: TextStyle(height: 1.5)),
-        //TODO Calculate end date
-        //Text('End Date: March 13, 2024',
-        //  style: TextStyle(height: 1.5)),
-        const SizedBox(height:20)
-      ],
+          Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(15.0),
+                  child: ElevatedButton(
+                      onPressed: () {_evalDataDisplayDialog();},
+                      child: const Text('Evaluation Data')),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                      onPressed: () {},
+                      child: const Text('View Analysis')),
+                )
+              ]
+          ),
+          const SizedBox(height:20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                  height: 65,
+                  width: 150,
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    label: Text('Fitness Level'),
+                      border: OutlineInputBorder(
+                          //borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(20)
+                      ),
+                  ),
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        targetPlan!.fitnessLevel,
+                        textScaleFactor: 1.2,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                )
+              ),
+              const SizedBox(width:20),
+              Container(
+                  height: 65,
+                  width: 150,
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      label: Text('Date Created'),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20)
+                      ),
+                    ),
+
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        DateFormat.yMd().format(targetPlan!.dateCreated),
+                        textScaleFactor: 1.2,
+                        textAlign: TextAlign.center,),
+                    )
+                    ,
+                  )
+              ),
+              const SizedBox(width:20),
+              Container(
+                  height: 65,
+                  width: 150,
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      label: Text('Goal Distance'),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20)
+                      ),
+                    ),
+                    child: const Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        '13.1 miles',
+                        textScaleFactor: 1.2,
+                        textAlign: TextAlign.center,),
+                    ),
+                  )
+              ),
+              const SizedBox(width:20),
+              Container(
+                  height: 65,
+                  width: 150,
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      label: Text('Time to Complete'),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20)
+                      ),
+                    ),
+                    child: const Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        '12 weeks',
+                        textScaleFactor: 1.2,
+                        textAlign: TextAlign.center,),
+                    ),
+                  )
+              ),
+            ],
+          ),
+          //TODO Calculate end date
+          //Text('End Date: March 13, 2024',
+          //  style: TextStyle(height: 1.5)),
+          //const SizedBox(height:20)
+          const SizedBox(height:20),
+        ],
+      ),
     );
   }
   
@@ -655,12 +801,10 @@ class _MyHomePageState extends State<MyHomePage> {
           return Card(
             child: Column(
               children: <Widget>[
-                workoutTitle(workout!, context),
+                workoutTitle(workout!, context, index),
                 Row(
                   children: [
-                    leadingImage(workout, context),
                     workoutDetails(workout, context),
-                    workoutCompletion(workout, index)
                   ],
                 )
               ],
@@ -672,37 +816,39 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget workoutTitle(Workout workout, context) {
+  Widget workoutTitle(Workout workout, context, index) {
     return Container(
       width: double.infinity,
-      color: Colors.white10,
+      //color: Colors.white10,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade700.withOpacity(0.3),
+          Colors.transparent],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter
+        )
+      ),
       padding: const EdgeInsets.all(8.0),
       constraints: const BoxConstraints.tightForFinite(
-        height: 45,
+        height: 70,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'Exercise #${workout.positionInSequence}',
-            style: Theme.of(context).textTheme.headlineSmall,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Exercise #${workout.positionInSequence}',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              Text('Week ${workout.weekNumber}',
+                  style: Theme.of(context).textTheme.titleSmall),
+            ],
           ),
-          Text('Week ${workout.weekNumber}',
-              style: Theme.of(context).textTheme.headlineSmall)
+          workoutCompletion(workout, index)
         ],
       ),
-    );
-  }
-
-  Widget leadingImage(Workout workout, context) {
-    return SizedBox(
-        height: 100,
-        width: 100,
-        child: Icon(
-          Icons.directions_run,
-          color: Colors.deepOrange[400],
-          size: 40,
-        )
     );
   }
 
@@ -710,19 +856,93 @@ class _MyHomePageState extends State<MyHomePage> {
     return Expanded(
       child: Padding(
           padding: const EdgeInsets.all(10.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                  'Goals:',
-                  style: TextStyle(fontWeight: FontWeight.bold, height: 1.5)),
-              Text(
-                  '${workout.distance} ${workout.description}',
-                  style: const TextStyle(height: 1.5)),
-              Text(
-                  'Target heart rate: ${workout.targetHeartRate} \nType: ${workout.type}',
-                  style: const TextStyle(height: 1.5)),
-            ],
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.directions_run,
+                  color: Colors.deepOrange[400],
+                  size: 40,
+                ),
+                SizedBox(width:10),
+                SizedBox(
+                  width: 250,
+                  child: Column(
+                    children: [
+                      Text('Distance', style: Theme.of(context).textTheme.labelMedium),
+                      Text(
+                        '${workout.distance} ${workout.description}',
+                        textScaleFactor: 1.5,
+                          style: const TextStyle(height: 1.5)
+                      ),
+                    ],
+                  ),
+                ),
+                const VerticalDivider(
+                  width: 30,
+                  thickness: 2,
+                  color: Colors.blue,
+                ),
+                Icon(
+                  Icons.favorite,
+                  color: Colors.red[400],
+                  size: 25,
+                ),
+                SizedBox(width:10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Target heart rate', style: Theme.of(context).textTheme.labelMedium),
+                    Text('${workout.targetHeartRate} bpm',
+                        textScaleFactor: 1.5,
+                        style: const TextStyle(height: 1.5)),
+                  ],
+                ),
+                const VerticalDivider(
+                  width: 30,
+                  thickness: 2,
+                  color: Colors.blue,
+                ),
+                Icon(
+                  Icons.double_arrow,
+                  color: Colors.yellow[400],
+                  size: 25,
+                ),
+                SizedBox(width:10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Target pace', style: Theme.of(context).textTheme.labelMedium),
+                    Text(
+                        '${printPace(workout.targetPace)} / mi',
+                        textScaleFactor: 1.5,
+                        style: const TextStyle(height: 1.5)),
+                  ],
+                ),
+                const VerticalDivider(
+                  width: 30,
+                  thickness: 2,
+                  color: Colors.blue,
+                ),
+                Icon(
+                  Icons.fitness_center,
+                  color: Colors.green[400],
+                  size: 25,
+                ),
+                SizedBox(width:10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Workout type', style: Theme.of(context).textTheme.labelMedium),
+                    Text(
+                        '${workout.type}',
+                        textScaleFactor: 1.5,
+                        style: const TextStyle(height: 1.5)),
+                  ],
+                ),
+              ],
+            ),
           )
       ),
     );
@@ -859,3 +1079,41 @@ Duration parseDuration(String input, {String separator = ':'}) {
       microseconds: 0);
 }
 
+String printPace(Duration duration) {
+  String twoDigitMinutes = duration.inMinutes.remainder(60).toString();
+  String twoDigitSeconds = duration.inSeconds.remainder(60).abs().toString().padLeft(2, "0");
+  return "$twoDigitMinutes:$twoDigitSeconds";
+}
+
+String evalDataRow(EvaluationData data) {
+  String evalRow = '';
+  for (IntervalRun run in data.intervalRuns) {
+    evalRow += '${run.distance} meters in ${printPace(run.time)} with ${run.heartrate} bpm\n';
+  }
+  return evalRow;
+}
+
+class Analysis extends StatelessWidget {
+  const Analysis({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Table(
+      children: [
+        TableRow(
+          children: <Widget> [
+            Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Text(targetPlan!.evaluationData.intervalRuns[0].distance.toString())),
+            Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Text(targetPlan!.evaluationData.intervalRuns[0].time.toString())),
+            Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Text(targetPlan!.evaluationData.intervalRuns[0].heartrate.toString()))
+          ]
+        )
+      ]
+    );
+  }
+}

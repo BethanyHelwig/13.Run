@@ -11,8 +11,8 @@ import 'intensity.dart';
 /// Calculates the final training plan, including all [workouts] using the
 /// information collected by the user for the [trainee] and [evalData] objects.
 ///
-/// Algorithms and calculates are copyright William Helwig, who created this plan
-/// as part of this Master's in Exercise Psy
+/// Algorithms and calculations are copyright William Helwig, who created this plan
+/// as part of his Master's in Exercise Physiology
 TrainingPlan calculateTrainingPlan(Trainee trainee, EvaluationData evalData) {
 
   /// This is originally calculated in microseconds then converted to Duration.
@@ -95,7 +95,7 @@ TrainingPlan calculateTrainingPlan(Trainee trainee, EvaluationData evalData) {
   }
 
   /// Create the intensity chart that sets the target heart rate for each type of workout
-  List<Intensity> intensityChart = calculateChart(heartrateRange, evalData.restingHeartrate);
+  List<Intensity> intensityChart = calculateChart(heartrateRange, evalData.restingHeartrate, averageHR, paceInMicroSeconds);
 
   /// Create the complete list of workouts built off the previously calculated information
   List<Workout> workouts = calculateWorkouts(beginningDistance, intensityChart);
@@ -355,21 +355,88 @@ calculateHeartRate(int beginningDistance, String type, int week, List<Intensity>
   }
   return 0;
 }
+
+/// Calculate the target heart rate for each workout intensity.
+calculatePace(int beginningDistance, String type, int week, List<Intensity> chart) {
+  /// for fitness levels of Low
+  if (beginningDistance == 1) {
+    if (week < 5) {
+      return chart[0].targetPace;
+    } else if (week < 9) {
+      switch (type) {
+        case 'Aerobic':
+          return chart[1].targetPace;
+        case 'Threshold':
+          return chart[3].targetPace;
+      }
+    } else {
+      switch (type) {
+        case 'Aerobic':
+          return chart[2].targetPace;
+        case 'Threshold':
+          return chart[3].targetPace;
+      }
+    }
+    /// for fitness levels of Fair and Average
+  } else if (beginningDistance == 2) {
+    if (week < 5) {
+      return chart[1].targetPace;
+    } else if (week < 9) {
+      switch (type) {
+        case 'Aerobic':
+          return chart[2].targetPace;
+        case 'Threshold':
+          return chart[3].targetPace;
+      }
+    } else {
+      switch (type) {
+        case 'Aerobic':
+          return chart[2].targetPace;
+        case 'Threshold':
+          return chart[4].targetPace;
+      }
+    }
+    /// for fitness levels of Good and High
+  } else if (beginningDistance == 3) {
+    if (week < 5) {
+      return chart[2].targetPace;
+    } else if (week < 9) {
+      switch (type) {
+        case 'Aerobic':
+          return chart[2].targetPace;
+        case 'Threshold':
+          return chart[4].targetPace;
+      }
+    } else {
+      switch (type) {
+        case 'Aerobic':
+          return chart[2].targetPace;
+        case 'Threshold':
+          return chart[4].targetPace;
+      }
+    }
+  }
+  return Duration();
+}
+
 /// Create intensity chart using heart rate range and resting HR.
-List<Intensity> calculateChart(int heartRateRange, int restingHeartRate) {
+List<Intensity> calculateChart(int heartRateRange, int restingHeartRate, int averageHeartRate, int paceInMicroSeconds) {
 
   List<Intensity> intensityChart = [
-    Intensity(description: 'Aerobic', rangePercentage: 0.6, heartrate: 0),
-    Intensity(description: 'Aerobic', rangePercentage: 0.7, heartrate: 0),
-    Intensity(description: 'Aerobic', rangePercentage: 0.75, heartrate: 0),
-    Intensity(description: 'Threshold', rangePercentage: 0.8, heartrate: 0),
-    Intensity(description: 'Threshold', rangePercentage: 0.9, heartrate: 0),
+    Intensity(description: 'Aerobic', rangePercentage: 0.6, heartrate: 0, targetPace: const Duration()),
+    Intensity(description: 'Aerobic', rangePercentage: 0.7, heartrate: 0, targetPace: const Duration()),
+    Intensity(description: 'Aerobic', rangePercentage: 0.75, heartrate: 0, targetPace: const Duration()),
+    Intensity(description: 'Threshold', rangePercentage: 0.8, heartrate: 0, targetPace: const Duration()),
+    Intensity(description: 'Threshold', rangePercentage: 0.9, heartrate: 0, targetPace: const Duration()),
   ];
 
   for(int i = 0; i < intensityChart.length; i++) {
     intensityChart[i].heartrate = (intensityChart[i].rangePercentage * heartRateRange +
         restingHeartRate).round();
+    int targetPaceInMicroSeconds = (paceInMicroSeconds * (averageHeartRate - restingHeartRate) / (intensityChart[i].heartrate - restingHeartRate)).round();
+    intensityChart[i].targetPace = Duration(days: 0, hours: 0, minutes: 0, seconds: 0, milliseconds: 0, microseconds: targetPaceInMicroSeconds);
   }
+
   return intensityChart;
 }
 
@@ -382,6 +449,7 @@ List<Workout> calculateWorkouts(int beginningDistance, List<Intensity> intensity
         type: 'Aerobic',
         distance: beginningDistance,
         targetHeartRate: calculateHeartRate(beginningDistance, 'Aerobic', 1, intensityChart),
+        targetPace: calculatePace(beginningDistance, 'Aerobic', 1, intensityChart),
         weekNumber: 1,
         completed: false),
     Workout(
@@ -390,6 +458,7 @@ List<Workout> calculateWorkouts(int beginningDistance, List<Intensity> intensity
         type: 'Aerobic',
         distance: beginningDistance,
         targetHeartRate: calculateHeartRate(beginningDistance, 'Aerobic', 1, intensityChart),
+        targetPace: calculatePace(beginningDistance, 'Aerobic', 1, intensityChart),
         weekNumber: 1,
         completed: false),
     Workout(
@@ -398,6 +467,7 @@ List<Workout> calculateWorkouts(int beginningDistance, List<Intensity> intensity
         type: 'Aerobic',
         distance: beginningDistance,
         targetHeartRate: calculateHeartRate(beginningDistance, 'Aerobic', 1, intensityChart),
+        targetPace: calculatePace(beginningDistance, 'Aerobic', 1, intensityChart),
         weekNumber: 1,
         completed: false),
     Workout(
@@ -406,6 +476,7 @@ List<Workout> calculateWorkouts(int beginningDistance, List<Intensity> intensity
         type: 'Aerobic',
         distance: beginningDistance + 1,
         targetHeartRate: calculateHeartRate(beginningDistance, 'Aerobic', 1, intensityChart),
+        targetPace: calculatePace(beginningDistance, 'Aerobic', 1, intensityChart),
         weekNumber: 1,
         completed: false),
     Workout(
@@ -414,6 +485,7 @@ List<Workout> calculateWorkouts(int beginningDistance, List<Intensity> intensity
         type: 'Aerobic',
         distance: beginningDistance,
         targetHeartRate: calculateHeartRate(beginningDistance, 'Aerobic', 2, intensityChart),
+        targetPace: calculatePace(beginningDistance, 'Aerobic', 2, intensityChart),
         weekNumber: 2,
         completed: false),
     Workout(
@@ -422,6 +494,7 @@ List<Workout> calculateWorkouts(int beginningDistance, List<Intensity> intensity
         type: 'Aerobic',
         distance: beginningDistance,
         targetHeartRate: calculateHeartRate(beginningDistance, 'Aerobic', 2, intensityChart),
+        targetPace: calculatePace(beginningDistance, 'Aerobic', 2, intensityChart),
         weekNumber: 2,
         completed: false),
     Workout(
@@ -430,6 +503,7 @@ List<Workout> calculateWorkouts(int beginningDistance, List<Intensity> intensity
         type: 'Aerobic',
         distance: beginningDistance,
         targetHeartRate: calculateHeartRate(beginningDistance, 'Aerobic', 2, intensityChart),
+        targetPace: calculatePace(beginningDistance, 'Aerobic', 2, intensityChart),
         weekNumber: 2,
         completed: false),
     Workout(
@@ -438,6 +512,7 @@ List<Workout> calculateWorkouts(int beginningDistance, List<Intensity> intensity
         type: 'Aerobic',
         distance: beginningDistance + 2,
         targetHeartRate: calculateHeartRate(beginningDistance, 'Aerobic', 2, intensityChart),
+        targetPace: calculatePace(beginningDistance, 'Aerobic', 2, intensityChart),
         weekNumber: 2,
         completed: false),
   ];

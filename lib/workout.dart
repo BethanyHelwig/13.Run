@@ -3,6 +3,7 @@ import 'dart:collection';
 class Workout {
   int positionInSequence = 0;
   int targetHeartRate = 0;
+  Duration targetPace;
   String description = '';
   String type = '';
   int distance = 0;
@@ -12,6 +13,7 @@ class Workout {
   Workout({
     required this.positionInSequence,
     required this.targetHeartRate,
+    required this.targetPace,
     required this.description,
     required this.type,
     required this.distance,
@@ -23,6 +25,7 @@ class Workout {
   factory Workout.fromMap(LinkedHashMap<dynamic, dynamic> map) => Workout(
       positionInSequence: map['positionInSequence'],
       targetHeartRate: map['targetHeartRate'],
+      targetPace: Duration(microseconds: map['targetPace']),
       description: map['description'],
       type: map['type'],
       distance: map['distance'],
@@ -34,6 +37,7 @@ class Workout {
   Map<String, dynamic> toJson() => {
     'positionInSequence': positionInSequence,
     'targetHeartRate': targetHeartRate,
+    'targetPace': targetPace.inMicroseconds,
     'description': description,
     'type': type,
     'distance': distance,
